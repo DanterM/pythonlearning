@@ -1,16 +1,12 @@
-# while True:
-#     line = input('> ')
-#     if line == 'done':
-#         break
-#     print(line)
-# print('Done!')
 
-
+i = 0
 while True:
-    line = input('> ')
-    if line[0] == '#' :
-        continue
-    if line == 'done':
-        break
-    print(line)
-print('Done!')
+    index = []
+
+    x = input("输入数字：")
+    for i in :
+        index[i] = int(x)
+        i += 1
+
+
+print(index)
