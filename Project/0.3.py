@@ -1,29 +1,17 @@
-# 0.2版本 解决不知道服务器开放时间的问题
-# alert_is_present
+# 0.3版本
 # 简化代码
-# .exe
-
-
-# 如何判断有几个投标？
-# 将0版本更改成测试版本
-# 判断服务器时间
-
+# .exe or .app
+#等待测试
 from selenium import webdriver
 import pytesseract
-import os
 import time
 from PIL import Image
-from time import sleep
-from selenium.webdriver.common.keys import Keys
-import selenium
-from selenium.webdriver.support.wait import WebDriverWait
 import urllib.request
-from bs4 import BeautifulSoup
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
-import datetime
+
+
 
 driver = webdriver.Chrome()
 # 定义自己的用户名密码
@@ -31,7 +19,7 @@ username = "山东信和诚建设项目管理有限公司"
 password = "000333"
 # 执行操作的页面地址
 url = 'http://st.zzint.com/login.jsp'
-list = [3, 4, 5]
+list = [3, 4, 5, 6, 7]
 baojia = '0'
 
 
@@ -101,68 +89,36 @@ def pageChange():
 
 
 
-#每次运行都判断系统时间 并且计算出正确的运行时间
-def timeJudgement():
-    now = datetime.datetime.now()
-    currentTime = str(now.hour) + ":" + str(now.minute) + ":" + str(now.second)
-    print("当前时间："+currentTime)
-    currentHour = str(now.hour)
-    currentMinute = str(now.minute)
-    currentSecond = str(now.second)
+def get_webservertime():
+    while True:
+        while True:
+            # 返回一个对象
+            response = urllib.request.urlopen('http://st.zzint.com/login.jsp')
+            # 打印出远程服务器返回的header信息
+            # print (response.info())
+            header = response.info()
+            ts = header._headers[1][1]
+            # 将GMT时间转换成北京时间
+            # ltime = time.strptime(ts[5:25], "%d %b %Y %H:%M:%S")
+            ltime = time.strptime(ts[5:25], "%d %b %Y %H:%M:%S")
+            ttime = time.localtime(time.mktime(ltime) + 8 * 60 * 60)
+            dat = "%u-%02u-%02u" % (ttime.tm_year, ttime.tm_mon, ttime.tm_mday)
+            tm = "%02u:%02u:%02u" % (ttime.tm_hour, ttime.tm_min, ttime.tm_sec)
+            # print(dat, tm) #查看刷新时间
 
-    if int(currentHour) == 9:
-        # 立即运行程序
-        print("已开始运行程序")
+            # 到达设定时间，结束内循环
+            if ttime.tm_hour == 9 and ttime.tm_min == 0 and ttime.tm_sec == 0:
+                break
+        # 做正事，一天做一次
         execute()
-    elif int(currentHour) < 9:
-        waitTime = (60 - int(currentSecond)) + (59 - int(currentMinute)) * 60
-        print("距服务器开启还需等待" + str(waitTime) + "秒")
-        time.sleep(waitTime)
-        print("已开始运行程序")
-
-
-def chooseTime():
-    response = urllib.request.urlopen()
-    header = response.info()
-    ts = header._headers[1][1]
-    ltime = time.strptime(ts[5:25], "%d %b %Y %H:%M:%S")
-    ttime = time.localtime(time.mktime(ltime) + 8 * 60 * 60)
-    dat = "%u-%02u-%02u" % (ttime.tm_year, ttime.tm_mon, ttime.tm_mday)
-    tm = "%02u:%02u:%02u" % (ttime.tm_hour, ttime.tm_min, ttime.tm_sec)
-
-    print(ttime.tm_hour) #输出当前服务器的小时数
-    print(ttime.tm_min) #输出当前服务器的分钟数
-    print(ttime.tm_sec) #输出当前服务器的秒数
-
-
-    print(dat, tm)
-
-
-
-
-def getWaitTime():
-    print('京东时间：')
-    chooseTime('https://www.jd.com/')
-    print('采购网时间：')
-    chooseTime('http://st.zzint.com/login.jsp')
-
-
-
-    now = datetime.datetime.now()
-    currentTime = str(now.hour) + ":" + str(now.minute) + ":" + str(now.second)
-    print(currentTime)
-    currentHour = str(now.hour)
-    currentMinute = str(now.minute)
-    currentSecond = str(now.second)
-
-    print(currentHour)
-    print(currentMinute)
-    print(currentSecond)
+        break
 
 def execute():
+
     try:
         WebDriverWait(driver, 10).until(EC.presence_of_element_located(
             (By.XPATH, "//form[@id='pur!queryBidList']/table[2]/tbody/tr[" + str(3) + "]/td[9]/a[2]")))
+
         for n in list:
 
             try:
@@ -171,14 +127,12 @@ def execute():
                     (By.XPATH, "//form[@id='pur!queryBidList']/table[2]/tbody/tr[" + str(n) + "]/td[9]/a[2]")))
                 driver.find_element_by_xpath(
                     "//form[@id='pur!queryBidList']/table[2]/tbody/tr[" + str(n) + "]/td[9]/a[2]").click()
-                # print(driver.find_element_by_xpath("//form[@id='pur!queryBidList']/table[2]/tbody/tr[" + str(n) + "]/td[9]/a[2]"))
 
                 try:
                     WebDriverWait(driver, 10).until(EC.presence_of_element_located(
                         (By.XPATH, "//form[@id='pur!addBid']/table/tbody/tr[3]/td/input[1]")))
 
                     s = driver.find_elements_by_tag_name("input")
-                    # elements = driver.find_element_by_link_text("详情")
                     b = len(s)
                     print(b)
 
@@ -206,30 +160,6 @@ def execute():
                 finally:
                     pass
 
-                # 提交过后返回主界面？
-
-                # try:
-                #     # WebDriverWait(driver,10).until(EC.alert_is_present(("保存成功！")))
-                #     time.sleep(1)
-                #     if EC.alert_is_present:
-                #
-                #         print("Alert exists")
-                #
-                #         alert = driver.switch_to_alert()
-                #
-                #         print(alert.text)
-                #
-                #         alert.accept()
-                #
-                #         print("Alert accepted")
-                #
-                #     else:
-                #
-                #         print("NO alert exists")
-                # finally:
-                #     pass
-
-                # 自动点击按钮 回到主页
                 try:
                     WebDriverWait(driver, 10).until(EC.alert_is_present())
                     driver.switch_to.alert.accept()
@@ -247,9 +177,7 @@ def execute():
 if __name__== '__main__':
     handleLogin()
     pageChange()
-    timeJudgement()
-
-    execute()
+    get_webservertime()
 
 
 
