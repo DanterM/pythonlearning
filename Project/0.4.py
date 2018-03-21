@@ -1,11 +1,6 @@
-# 0.3版本
-# 简化代码
-# .exe or .app
-# 等待测试
-
+# 0.4版本
 # 在8：59分的时候刷新一下
 # 发现最新问题： 在execute中哪一步可以先加载完毕 等到服务器时间到了直接报价
-
 
 from selenium import webdriver
 import pytesseract
@@ -60,22 +55,46 @@ def handleLogin():
     # print(bottom)
     # 通过Image处理图像
     im = Image.open('/Users/Jarvis/Desktop/Jarvis/screenshot.png')
-
     im = im.crop((left, top, right, bottom))
     im.save('/Users/Jarvis/Desktop/Jarvis/vcode.png')
     image = Image.open('/Users/Jarvis/Desktop/Jarvis/vcode.png')
     vcode = pytesseract.image_to_string(image)
     # print(vcode)
+
     elem = driver.find_element_by_xpath("//*[@id='vcode']")
     elem.send_keys(vcode)
-
     elem = driver.find_element_by_xpath("//*[@type='image']")
     elem.click()
 
 
-
-
 #到8：59：30的时候刷新一下
+
+def get_pageChange():
+    while True:
+        while True:
+            # 返回一个对象
+            response = urllib.request.urlopen('http://st.zzint.com/login.jsp')
+            # 打印出远程服务器返回的header信息
+            # print (response.info())
+            header = response.info()
+            ts = header._headers[1][1]
+            # 将GMT时间转换成北京时间
+            # ltime = time.strptime(ts[5:25], "%d %b %Y %H:%M:%S")
+            ltime = time.strptime(ts[5:25], "%d %b %Y %H:%M:%S")
+            ttime = time.localtime(time.mktime(ltime) + 8 * 60 * 60)
+            dat = "%u-%02u-%02u" % (ttime.tm_year, ttime.tm_mon, ttime.tm_mday)
+            tm = "%02u:%02u:%02u" % (ttime.tm_hour, ttime.tm_min, ttime.tm_sec)
+            print(dat, tm) #查看刷新时间
+
+            # 到达设定时间，结束内循环
+            # 在8：59：45秒的时候点开页面能得到最新的页面
+            if ttime.tm_hour == 8 and ttime.tm_min == 59 and ttime.tm_sec >= 45:
+                break
+        # 做正事，一天做一次
+        pageChange()
+        break
+
+
 def pageChange():
     driver.switch_to_frame('menu')
 
@@ -89,8 +108,6 @@ def pageChange():
     driver.switch_to.default_content() #切出frame操作(不需要)
 
     driver.switch_to_frame('main')
-
-
 
 def get_webservertime():
     while True:
@@ -110,11 +127,12 @@ def get_webservertime():
             print(dat, tm) #查看刷新时间
 
             # 到达设定时间，结束内循环
-            if ttime.tm_hour == 9 and ttime.tm_min == 0 and ttime.tm_sec == 0:
+            if ttime.tm_hour >= 9 and ttime.tm_min >= 0 and ttime.tm_sec >= 0:
                 break
         # 做正事，一天做一次
         execute()
         break
+
 
 def execute():
 
@@ -125,25 +143,26 @@ def execute():
         for n in list:
 
             try:
-                # 现在无法确定投标路径是否正确 等待验证
+                # 现在无法确定投标路径是否正确 等待验证   ------》正确
+
+                # 点击投标
                 WebDriverWait(driver, 10).until(EC.presence_of_element_located(
                     (By.XPATH, "//form[@id='pur!queryBidList']/table[2]/tbody/tr[" + str(n) + "]/td[9]/a[2]")))
                 driver.find_element_by_xpath(
                     "//form[@id='pur!queryBidList']/table[2]/tbody/tr[" + str(n) + "]/td[9]/a[2]").click()
 
+                # 点击报价
                 try:
                     WebDriverWait(driver, 10).until(EC.presence_of_element_located(
                         (By.XPATH, "//form[@id='pur!addBid']/table/tbody/tr[3]/td/input[1]")))
-
                     s = driver.find_elements_by_tag_name("input")
                     b = len(s)
                     print(b)
-
                     driver.find_element_by_xpath("//form[@id='pur!addBid']/table/tbody/tr[3]/td/input[1]").click()
                 finally:
                     pass
 
-                # 之后进入最终报价页面
+                # 进入最终报价页面
                 try:
                     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH,
                                                                                     "//form[@id='pur!saveBid']/table/tbody/tr[2]/td[2]/table/tbody/tr[3]/td[7]/input")))
@@ -159,7 +178,6 @@ def execute():
                         yanzhengma)
                     # 点击提交
                     driver.find_element_by_xpath("//form[@id='pur!saveBid']/table/tbody/tr[3]/td/input").click()
-
                 finally:
                     pass
 
@@ -179,7 +197,7 @@ def execute():
 
 if __name__== '__main__':
     handleLogin()
-    pageChange()
+    get_pageChange()
     get_webservertime()
 
 
