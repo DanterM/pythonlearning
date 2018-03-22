@@ -8,9 +8,13 @@ if __name__ == "__main__":
 
     # 准备训练数据
     N = 100
+    # np.random.rand函数是从[0,1)抽取随机数   100个
     x = np.random.rand(N) * 6 - 3
+    # print(x)
     x.sort()
+
     y = x*x
+    # 逆序排列
     x = x.reshape(-1, 1)
     # mpl.rcParams['font.sans-serif'] = ['SimHei']
     # mpl.rcParams['axes.unicode_minus'] = False
@@ -29,6 +33,7 @@ if __name__ == "__main__":
     # 构建决策树
     dtr = DecisionTreeRegressor()
     # 循环不同深度情况下决策树的模型，并用之测试数据的输出
+    # zip()将两个参数打包成元祖
     for d, c in zip(depth, clr):
         # 设置最大深度（预剪枝）
         dtr.set_params(max_depth=d)
