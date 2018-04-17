@@ -11,6 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 
+
 driver = webdriver.Chrome()
 # 定义自己的用户名密码
 username = "山东信和诚建设项目管理有限公司"
@@ -66,8 +67,7 @@ def handleLogin():
     elem = driver.find_element_by_xpath("//*[@type='image']")
     elem.click()
 
-
-#到8：59：30的时候刷新一下
+# 到8：59：30的时候刷新一下
 
 def get_pageChange():
     while True:
